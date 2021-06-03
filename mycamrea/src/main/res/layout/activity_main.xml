@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:background="@color/black"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".activity.MainActivity">
+
+    <LinearLayout
+        android:id="@+id/main_top_ll"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_gravity="top"
+        android:orientation="horizontal"
+        >
+
+
+        <ImageView
+        android:id="@+id/main_flash"
+        android:layout_gravity="center_vertical"
+        android:layout_width="25dp"
+        android:layout_height="25dp"
+        android:layout_weight="1"
+        android:src="@mipmap/flash_off"/>
+
+
+       <ImageView
+        android:id="@+id/main_settings"
+        android:layout_gravity="center_vertical"
+        android:layout_width="25dp"
+        android:layout_height="25dp"
+        android:layout_weight="1"
+        android:src="@mipmap/settings"/>
+
+        <ImageView
+            android:id="@+id/main_ratio"
+            android:layout_gravity="center_vertical"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:layout_weight="1"
+            android:src="@mipmap/ratio4_3"/>
+
+
+
+    </LinearLayout>
+
+
+
+    <com.example.mycamrea.View.MyTextureView
+        android:id="@+id/main_texture_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="50dp" />
+
+    <com.example.mycamrea.View.MyReferenceLineView
+        android:id="@+id/main_reference_line_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="50dp" />
+
+    <com.example.mycamrea.View.FocusView
+        android:id="@+id/main_focus_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="50dp" />
+
+    <TextView
+        android:id="@+id/main_countdown_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="120dp"
+        android:textSize="50sp"
+        android:visibility="invisible"
+        android:text="10"
+        android:layout_gravity="bottom|center_horizontal"/>
+
+    <LinearLayout
+        android:id="@+id/main_video_time_ll"
+        android:visibility="invisible"
+        android:layout_width="wrap_content"
+        android:layout_height="50dp"
+        android:layout_marginTop="60dp"
+        android:layout_gravity="top|center"
+        android:orientation="horizontal"
+        >
+        <TextView
+            android:id="@+id/main_video_time_animation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="●"
+            android:textSize="20sp"
+            android:padding="10dp"
+            android:textColor="@color/red"/>
+        <TextView
+            android:id="@+id/main_video_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:textSize="20sp"
+            android:padding="10dp"
+            android:textColor="@color/white"
+            android:text="10:10"
+            />
+
+    </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/main_bottom_fl"
+        android:layout_width="match_parent"
+        android:layout_height="240dp"
+        android:layout_gravity="bottom"
+        android:orientation="horizontal">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/main_recyclerView"
+            android:layout_gravity="center|top"
+            android:layout_marginTop="20dp"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:padding="10dp"/>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:id="@+id/main_seekBar_rl">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/main_seekBar_Text"
+                android:text="iso"/>
+            <SeekBar
+                android:layout_toRightOf="@+id/main_seekBar_Text"
+                android:layout_width="300dp"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:id="@+id/main_seekBar"
+                />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/main_seekBar_value"
+                android:text="100"
+                android:layout_toRightOf="@+id/main_seekBar"/>
+        </RelativeLayout>
+
+
+
+
+
+        <com.example.mycamrea.View.MyCircleView
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_gravity="center|left"
+            android:layout_marginLeft="40dp"/>
+
+        <com.example.mycamrea.View.MyImageCircleView
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_gravity="center|left"
+            android:layout_marginLeft="40dp"
+            android:id="@+id/main_image_show"
+            />
+
+        <com.example.mycamrea.View.MyCircleView
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_gravity="center" />
+
+        <com.example.mycamrea.View.MyTakePictureButton
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:id="@+id/main_take_picture"
+            android:layout_gravity="center"
+            />
+
+        <com.example.mycamrea.View.MyCircleView
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_gravity="center|right"
+            android:id="@+id/main_lens_reversal"
+            android:layout_marginRight="40dp"
+            />
+
+        <ImageView
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_gravity="center|right"
+            android:src="@mipmap/lens_reversal"
+            android:layout_marginRight="55dp"
+            />
+
+
+    </FrameLayout>
+
+</FrameLayout>

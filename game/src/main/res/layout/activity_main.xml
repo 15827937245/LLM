@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg"
+    tools:context=".MainActivity">
+
+    <ImageView
+        android:id="@+id/main_image"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center"
+        />
+
+
+    <ImageView
+        android:id="@+id/main_img"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        />
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="test"
+        android:onClick="test"/>
+
+    <RelativeLayout
+        android:layout_width="180dp"
+        android:layout_height="160dp"
+        android:layout_gravity="bottom|left"
+        >
+    <Button
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:id="@+id/main_center_btn"
+        android:layout_centerInParent="true"
+        />
+
+    <com.example.game.view.MyButton
+        android:id="@+id/main_up_btn"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_above="@+id/main_center_btn"
+        android:layout_centerHorizontal="true"
+        android:text="up"
+        />
+        <com.example.game.view.MyButton
+            android:id="@+id/main_down_btn"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:padding="10dp"
+            android:layout_below="@+id/main_center_btn"
+            android:layout_centerHorizontal="true"
+            android:text="down"
+            />
+        <com.example.game.view.MyButton
+            android:id="@+id/main_left_btn"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_toLeftOf="@+id/main_center_btn"
+            android:layout_centerVertical="true"
+            android:text="left"
+            />
+        <com.example.game.view.MyButton
+            android:id="@+id/main_right_btn"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:padding="10dp"
+            android:layout_toRightOf="@+id/main_center_btn"
+            android:layout_centerVertical="true"
+            android:text="right"
+            />
+    </RelativeLayout>
+</FrameLayout>
