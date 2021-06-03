@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".activity.SettingsActivity">
+
+<RelativeLayout
+    android:layout_width="match_parent"
+    android:layout_height="40dp">
+    <ImageView
+        android:id="@+id/set_back"
+        android:layout_width="25dp"
+        android:layout_height="25dp"
+        android:layout_centerVertical="true"
+        android:src="@mipmap/back"
+        android:layout_marginLeft="10dp"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="设置"
+        android:textColor="@color/white"
+        android:textSize="25sp"
+        android:layout_toRightOf="@+id/set_back"
+        android:layout_marginLeft="10dp"
+        android:layout_centerVertical="true"/>
+</RelativeLayout>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/white"
+        />
+
+<RelativeLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="10dp"
+    >
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="水印"
+        android:textColor="@color/white"
+        android:textSize="20sp"
+        android:layout_marginLeft="10dp"
+        android:layout_centerVertical="true"/>
+
+    <Switch
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:id="@+id/set_water_mark"
+        />
+
+</RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="10dp"
+        >
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="参考线"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:layout_marginLeft="10dp"
+            android:layout_centerVertical="true"/>
+
+        <Switch
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:id="@+id/set_reference_line"
+            />
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/set_countdown_rl"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="10dp"
+        android:layout_gravity="center_vertical"
+        >
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="倒计时"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:layout_marginLeft="10dp" />
+
+        <TextView
+            android:id="@+id/set_countdown"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toLeftOf="@+id/set_next"
+            android:textSize="13sp"
+            android:layout_centerInParent="true"
+            android:text="关闭"
+            />
+        <ImageView
+            android:id="@+id/set_next"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:layout_centerVertical="true"
+            android:src="@mipmap/next"
+            android:layout_alignParentRight="true"
+            />
+    </RelativeLayout>
+
+</LinearLayout>
