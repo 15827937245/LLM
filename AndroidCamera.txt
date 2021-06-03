@@ -1,0 +1,865 @@
+Camera基础:
+1，常用API类介绍
+CameraManager,CameraDevice,CameraCharacteristics,CameraCaptureSession,
+StreamConfigurationMap,ImageReader,CaptureRequest,CaptureResult
+2，起预览流程代码实现
+CameraManager--opencamera()--CameraId
+onOpened()--CameraDevice
+CameraDevice--createCaptureSession--Surface(width,height)
+onConfigured--CameraCaptureSession
+CameraCaptureSession.setRepeatingRequest--template_preview
+3，拍照流程代码实现
+CameraCaptureSession.captue()--template_capture
+4，录像流程代码实现
+录像流程描述：
+录像是按照google官方demo实现的，点击开始录像，
+会先关闭预览session，然后初始化MediaRecorder,
+再创建录像session,录像session会下发预览Surface和MediaRecorder.Surface两路流，
+所用模板为template_recorde,调用MediaRecorder.start()开始录像。   
+停止录像调用MediaRecorder.reset及stop,然后重新创建预览session
+5，如何下发参数，如何获取底层返回参数：
+   如下发闪光灯的打开和关闭，对焦模式下发及获取AF/AE状态
+   FLASH_MODE:
+       FLASH_MODE_OFF
+       FLASH_MODE_SINGLE
+       FLASH_MODE_TORCH
+   CONTROL_AF_MODE:
+	   CONTROL_AF_MODE_OFF
+       CONTROL_AF_MODE_AUTO
+       CONTROL_AF_MODE_MACRO
+       CONTROL_AF_MODE_CONTINUOUS_VIDEO
+       CONTROL_AF_MODE_CONTINUOUS_PICTURE
+       CONTROL_AF_MODE_EDOF
+	CONTROL_AE_MODE:   
+	   CONTROL_AE_MODE_OFF
+       CONTROL_AE_MODE_ON
+       CONTROL_AE_MODE_ON_AUTO_FLASH
+       CONTROL_AE_MODE_ON_ALWAYS_FLASH
+       CONTROL_AE_MODE_ON_AUTO_FLASH_REDEYE
+       CONTROL_AE_MODE_ON_EXTERNAL_FLASH
+   CaptureRequest.Builder.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_TORCH);
+   CaptureRequest.Builder.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_OFF);
+   CaptureRequest.Builder.set(CaptureRequest.SENSOR_SENSITIVITY, 100);
+   CaptureRequest.Builder.set(CaptureRequest.SENSOR_EXPOSURE_TIME, 100l);
+   Integer afState = CaptureResult.get(CaptureResult.CONTROL_AF_STATE);
+6，拍照录像模式切换实现
+关闭拍照相机id，关闭Session,选择录像模式，重新选择previewSize,videoSize,重新打开相机，起预览
+7，4:3/16:9分辨率切换实现
+同时修改切换预览TextureView和预览Surface的宽高及ImageReader的宽高
+8,拍照模式小缩略图生成实现
+将底层返回数据转换为Bitmap,再根据Bitmap生成小尺寸的Bitmap,然后更新UI
+9，点击缩略图进入相册实现
+启动打开图库包名的Activity，传递对应的图片Uri
+10，拍照方向实现
+下发key为CaptureRequest.JPEG_ORIENTATION，value为通过手机方向和sensor传感器方向计算得来
+11，水印功能实现
+将底层返回数据转换为Bitmap,然后创建空bitmap,拿到canvas,然后画原图片数据和水印数据，然后将画后的bitmap保存为图片
+12，图片格式种类介绍
+jpeg--ImageFormat.JPEG,yuv--ImageFormat.YUV_420_888,raw--ImageFormat.RAW_SENSOR
+13，Surface，SurfaceTexture,ImagerReader.Surface,MediaRecorder.Surface几个Surface的区别
+   Surface--一个buffer,用来存放图片数据
+   SurfaceTexture--用来将图片数据变成纹理供opengl es绘制
+   ImagerReader.Surface--用来获取拍照数据
+   MediaRecorder.Surface--用来获取录像数据
+14、yuv、jpeg、bitmap，YUV和NV21格式的区别
+参考链接：https://blog.csdn.net/sslinp/article/details/83417711
+yuv--一种颜色编码格式，Y代表亮度信息（灰度），UV分别代表色彩信息
+jpeg--一种图像压缩标准,保存的是被压缩处理过的图片数据
+bitmap--图片在内存中的表示方式--位图
+raw--未经压缩处理的，sensor只出图像数据
+YUV_420_888--android yuv通用格式
+NV21是yuv_420的一种，实际项目中，拿到YUV数据，需转换为NV21，然后传给算法处理
+15、JIN简单介绍（提高部分）
+  java native interface,作用：java 和C互调
+16，4：3、16：9预览拉伸变形如何处理
+需保证TextureView和预览Surface的宽高比一致
+17，自己实现的camera应用中用到几个线程
+两个，一个UI线程，一个相机操作线程
+18，16:9和4:3哪个视角更大
+ 4：3视角更大
+19，4:3和16:9的常用的预览尺寸及如何获取：
+    4 ：3预览尺寸为1440*1080
+    16：9预览尺寸为1920*1080
+20，预览尺寸，拍照尺寸，录像尺寸如何获取：
+    获取：
+	先拿到CameraCharacteristics，然后拿到StreamConfigurationMap,然后拿到支持的预览大小的数据Size[],
+	然后从数组中选出自己需要的预览大小，拍照尺寸，录像尺寸
+21，回调的线程和创建回话创建请求之类的线程是不是同一线程
+是同一线程
+22，预览和录像的区别
+预览请求模板为template_preview,
+录像请求模板为template_record,
+预览创建session会传两个Surface（也叫两路流）,一个预览Surface，一个拍照Surface,来自ImageReader
+录像创建session会传两个Surface（也叫两路流）,一个预览Surface，一个录像Surface,来自MediaRecorder
+23.在录像上拍照应该怎么实现
+创建录像Session的时候，传三个Surface(也叫三路流)，一个预览Surface，一个录像Surface,来自MediaRecorder，一个拍照Surface,来自ImageReader，
+然后录像过程中点击拍照时，调用session的capture方法
+24，如何获取Jpeg，YUV，Raw照片数据
+new ImageReader时传不同的ImageFormat就获取不同的图片数据：
+ImagerFormat.JPEG,ImagerFormat.YUV_420_888,ImagerFormat.RAW_SENSOR
+25，如何在开启相机的时候判断开启的是前置摄像头
+先拿到CameraCharacteristics,然后获取当前相机的LENS_FACING
+26. MediaRecorder设置哪些参数
+   音频源，视频源，录像格式，录像保存路径，录像宽高，编码格式，帧率 
+27,获取帧率范围：
+   CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES   
+28. CameraId怎么拿到
+    cameraManager.getCameraIdList();
+29. 怎么获取到闪关灯的状态：
+   CaptureResult#FLASH_STATE
+30，连拍实现API:
+  setRepeatingBurst();
+31,相机模板有哪些：
+          TEMPLATE_PREVIEW,预览模板
+          TEMPLATE_STILL_CAPTURE,拍照模板
+          TEMPLATE_RECORD,录像模板
+          TEMPLATE_VIDEO_SNAPSHOT,录像过程中拍照
+          TEMPLATE_ZERO_SHUTTER_LAG,零延时拍照
+          TEMPLATE_MANUAL，手动拍照
+32,慢动作如何实现：
+        mMediaRecorder.setVideoFrameRate(30);
+        if (mCurrentMode == CameraConstant.SLOW_FPS_MODE) {
+            //mMediaRecorder.setCaptureRate(120);慢动作
+            mMediaRecorder.setCaptureRate(10);//快动作
+        }
+33,前后置切换如何实现：
+先关闭当前摄像头和session,然后拿到当前摄像头CameraCharacteristics，
+然后获取LENS_FACING的置，判断当前摄像头是面向前还是后，然后重新打开相机，起预览 
+34，相机预览卡顿：
+应用层的可能原因为：严重的内存泄漏会导致频繁的gc，从而导致卡顿。
+
+Android基础：
+1，Android四层架构介绍：
+参考链接：https://www.cnblogs.com/loaderman/p/6430421.html?utm_source=itdadao&utm_medium=referral
+(1),Applications-各种手机应用，运行在虚拟机上
+(2),Application framework--google提供的开发应用的API框架
+(3),libraries--系统提供的库，供调用，比如SQLite,Opengl es;Dalvik虚拟机-一个应用一个虚拟机
+(4),linux kernel--相机驱动，Binder IPC驱动提供进程间通讯
+2，Android四大组件介绍：
+  (1)Activity生命周期介绍:
+  生命周期：参考链接：https://blog.csdn.net/ican87/article/details/21874447
+     七个生命周期方法：onCreate,onStart,onResume,onPause,onStop,onDestroy,onRestart
+         按Home键Activity生命周期：
+		    onPause,onStop,然后点击进入：onRestart,onStart,onResume,杀死进程：onDestroy  
+         一个MainActivity跳转到另一个SecondActivity:
+             MainActivity onPause
+             SecondActivity onCreate
+             SecondActivity onStart
+             SecondActivity onResume
+             MainActivity onStop
+             从SecondActivity返回到MainActivity:
+             SecondActivity onPause
+             MainActivity onRestart
+             MainActivity onStart
+             MainActivity onResume
+             SecondActivity onStop
+             SecondActivity onDestroy
+   Activity四种启动模式:
+   参考链接：https://blog.csdn.net/elisonx/article/details/80397519
+   四种启动模式：
+       Standard--默认启动模式-每次启动该Activity，都创建新的Activity
+	   SingleTop--单顶-栈顶复用栈中已有Activity(onNewIntent调用)，不在栈顶再创建新的Activity
+	            --应用场景：需重新启动自身，节省内存
+	   SingleTask--单任务-弹出其它，使其处于栈顶
+	             --应用场景：保持我们应用开启后仅仅有一个Activity的实例，比如首页，相机主Activity
+	   SingleInstance-单例-单独为其创建栈--锁屏键的应用，普通应用不用
+	启动模式设置方式：
+	   Manifest.xml中指定
+	   Intent中指定
+   两种启动方式的区别：
+      （1）优先级：Intent中指定优先级更高
+      （2）限定范围：
+	     第一种方式无法为Activity直接指定FLAG_ACTIVITY_CLEAR_TOP标识
+		 第二种方式无法为Activity指定 singleInstance 模式
+  (2)Service的介绍：
+  参考链接：
+      https://www.runoob.com/android/android-services.html
+	  https://blog.csdn.net/qq_27061049/article/details/109366345
+  一个后台运行的组件，执行长时间运行且不需要用户交互的任务,运行在主线程
+  Service并不是运行在一个独立的进程当中的，而是依赖于创建服务时所在的应用程序进程。
+  当某个应用程序进程被杀掉时，所有依赖于该进程的服务也会停止运行。
+  包括两类：
+     本地service：就是和当前应用在同一个进程中的service
+	 远程service：主要牵扯到不同进程间的service访问--通信方式工具
+  服务的两种状态及生命周期：
+       startService()启动了服务,执行单一操作，而且不会将结果返回给调用方
+	        --onCreate,onStart/onStartCommand,onDestroy 
+       bindService()绑定了服务，可以与服务进行交互,多个组件可以同时绑定到该服务,全部取消绑定后，该服务即会被销毁
+	        --onCreate,onBind,onUnbind,onRebind,onDestroy 
+  两种启动方式：显示启动，隐示启动：		
+	     如果在同一个应用中，两者都可以用。在不同应用时，只能用隐式启动。
+  (3)BroadcastReceiver的介绍：
+      参考链接：https://www.cnblogs.com/ryq2014/p/10184555.html
+	  Android组件间的通信方式。 
+	  Android广播分为两个方面：广播发送者和广播接收者
+      两种注册类型：AndroidManifest.xml静态注册和代码动态注册
+	  备注：android 8.0（API26）开始，对清单文件中静态注册广播接收者增加了限制，
+	        发送广播时需添加设置：intent.setClassName(this,"com.example.bbreceiver.AReciver");
+      根据广播的发送方式，广播分类：普通广播，系统广播，有序广播
+      生命周期只有十秒左右，如果在onReceive()内做超过十秒内的事情，就会报ANR(Application No Response)程序无响应的错误信息。它的生命周期为从回调onReceive()方法开始到该方法返回结果后结束
+  (4)ContentProvider简介--ContentResolver
+      用来将本应用数据暴露给另一个应用访问的工具
+3，LinearLayout/RelativeLayout/FrameLayout常用布局，EditText/Button/TextView常用控件：
+   LinearLayout--线性布局
+   RelativeLayout--相对布局
+   FrameLayout--帧布局
+4,Android数据的四大存储方式：
+   （1）SharedPreference存储--相机里面设置参数存储--data/data/
+   （2）ContentProvider--相机缩略图-ContentResolver
+   （3）文件存储--data/SDCard
+   （4）Sqlite数据库存储
+5，Handler的用法介绍：
+  参考链接：https://www.cnblogs.com/zhoug2020/p/12841311.html
+  作用：子线程发送消息给主线程或者主线程发送消息给子线程或任意两个线程之间的通信
+  原理：
+     MessageQueue--消息队列存放消息
+	 Looper--查找消息队列
+	 Hanlder发送和处理消息
+	 Message消息
+	 一个线程里面可以有多个Handler，有1个looper，有1个MessageQueue
+6,自定义View流程介绍：
+  分类：1,继承View,包括继承具体View比如Button,TextView 
+        2,继承ViewGroup，,包括继承具体ViewGroup比如LinearLayout
+     继承View/Button:选择实现onMeasure，必须实现onDraw
+     继承ViewGroup/LinearLayout:必须实现onMeasure,必须实现onLayout，不用实现onDraw
+	 xml中设置的View的宽高，可以通过两种方式拿到：
+	 （1），onSizeChanged()
+	 （2），onMeasure()--MeasureSpec.getSize(widthMeasureSpec)，MeasureSpec.getSize(heightMeasureSpec)，
+	                     getMeasuredWidth/getMeasuredHeight
+	widthMeasureSpec/heightMeasureSpec里面封装了两个参数一共是mode,一个是size
+7，动画介绍
+  分类：帧动画，补间动画，属性动画
+  属性动画包括：ObjectAnimator和ValueAnimator
+8，事件分发机制介绍：
+    https://www.cnblogs.com/chengxuyinli/p/9979826.html
+   主要处理对屏幕的点击滑动等事件
+   相关方法：
+       Activity--dispatchTouchEvent，onTouchEvent
+       ViewGroup--dispatchTouchEvent，onInterceptTouchEvent,onTouchEvent
+       View--dispatchTouchEvent,onTouchEvent
+   事件包括：
+       MotionEvent.ACTION_DOWN--在屏幕按下时
+       MotionEvent.ACTION_MOVE--在屏幕上滑动时
+       MotionEvent.ACTION_UP--在屏幕抬起时
+	   MotionEvent.ACTION_CANCLE--滑动超出控件边界时
+	   在安卓对事件分发的处理过程中，主要是对按下事件作分发，进而找到能够处理按下事件的组件。
+	       对于事件流中后续的事件（如滑动、抬起等），则直接分发给能够处理按下事件的组件
+   事件分发流程：
+       事件传到Activity，
+	      首先调用其dispatchTouchEvent方法，如果返回true,表示消耗事件，返回false,表示分发事件，
+		  事件会传递给子ViewGroup处理，
+	   该子ViewGroup会调用其dispatchTouchEvent方法，
+	   如果该方法被覆写直接返回TRUE,表示已经消费事件。
+	   如果该方法没有被覆写或调用了super的同名方法，则会调用onInterceptTouchEvent方法，
+	   如果该方法返回TRUE拦截事件，则交给自身的onTouchEvent处理，
+	   如果该方法返回FALSE不拦截，则继续传给子子View的dispatchTouchEvent方法处理。
+	   若在该方法中的onTouchListener方法不处理，则调用自身的onTouchEvent处理。
+	   若还是处理不了，依次调用ViewGroup的、Activity的onTouchEvent方法。
+	事件冲突处理：
+	    同一时刻只能由某一个View或者ViewGroup消费拦截,
+	    1，滑动方向不同--ScrollView里面嵌套ViewPage
+		    解决方法：1，从 父View 着手,重写 onInterceptTouchEvent 方法,在 父View 需要拦截的时候拦截,不要的时候返回false
+			          2，从子View着手,父View 先不要拦截任何事件,所有的 事件传递给 子View,如果 子View 需要此事件就消费掉,不需要此事件的话就交给 父View 处理
+		                 实现思路 如下,重写 子View 的 dispatchTouchEvent 方法,在 Action_down 动作中通过方法 requestDisallowInterceptTouchEvent(true) 
+			             先请求 父View 不要拦截事件,这样保证 子View 能够接受到Action_move事件,再在Action_move动作中根据 
+			             自己的逻辑是否要拦截事件,不要的话再交给 父View 处理
+		2，滑动方法相同-- ViewPager嵌套ViewPager
+		    解决方法：从 子View ViewPager着手,重写 子View 的 dispatchTouchEvent方法,在 子View
+                      需要拦截的时候进行拦截,否则交给 父View 处理
+	优先级:OnTouchListener > onTouchEvent > onClickListener   
+9，多线程相关知识介绍：线程创建，多线程实现，线程生命周期
+  参考链接：
+	  https://www.cnblogs.com/wugongzi/p/11491965.html
+	  https://www.cnblogs.com/wugongzi/p/11994825.html
+	  https://www.cnblogs.com/moongeek/p/7631447.html
+	  
+	  进程：
+	      当一个程序进入内存运行时，即变成一个进程，
+		  进程与程序的区别在于，程序只是一个静态的指令集合，而进程是一个正在系统中活动的指令集合。
+	  线程：  
+		  一个比进程更小的执行单位。一个进程在其执行的过程中可以产生多个线程,可设置优先级
+	  并发：
+	      同一时刻只能有一条指令执行，但多个进程指令被快速轮换执行
+      并行：
+	      同一时刻，有多条指令在多个处理器上同时执行　
+	  线程实现方式：
+	    一种是继承 Thread 类，一种是实现 Runnable 接口，一种是实现Callable	
+      线程共包括以下 5 种状态:
+        1. 新建状态(New): 线程对象被创建后，就进入了新建状态。例如，Thread thread = new Thread()。
+        2. 就绪状态(Runnable): 也被称为“可执行状态”。线程对象被创建后，其它线程调用了该对象的start()方法，从而来启动该线程。例如，thread.start()。处于就绪状态的线程，随时可能被CPU调度执行。
+        3. 运行状态(Running): 线程获取CPU权限进行执行。需要注意的是，线程只能从就绪状态进入到运行状态。
+        4. 阻塞状态(Blocked): 阻塞状态是线程因为某种原因放弃CPU使用权，暂时停止运行。直到线程进入就绪状态，才有机会转到运行状态。阻塞的情况分三种： 
+            (01) 等待阻塞 -- 通过调用线程的wait()方法，让线程等待某工作的完成。
+            (02) 同步阻塞 -- 线程在获取synchronized同步锁失败(因为锁被其它线程所占用)，它会进入同步阻塞状态。
+            (03) 其他阻塞 -- 通过调用线程的sleep()或join()或发出了I/O请求时，线程会进入到阻塞状态。当sleep()状态超时、join()等待线程终止或者超时、或者I/O处理完毕时，线程重新转入就绪状态。
+        5. 死亡状态(Dead): 线程执行完了或者因异常退出了run()方法，该线程结束生命周期  
+      从Running状态变成Runnable状态。线程进入Runnable状态大体分为如下5种情况：
+        调用sleep()方法后经过的时间超过了指定的休眠时间。
+        线程调用的阻塞I0已经返回，阻塞方法执行完毕。
+        线程成功地获得了试图同步的监视器。
+        线程正在等待某个通知，其他线程发出了通知。
+        处于挂起状态的线程调用了resume恢复方法
+	  出现阻塞的情况有以下几种：
+        线程调用sleep()方法，主动放弃占用的处理器资源。
+        线程调用了阻塞式IO方法，在该方法返回前，该线程被阻塞。
+        线程试图获得一个同步监视器，但该同步监视器正被其他线程所持有。
+        线程等待某个通知。
+        程序调用了suspend方法将该线程挂起。此方法容易导致死锁，尽量避免使用该方法
+	 常用方法：
+	      join() --main线程调用了jt线程的join方法，main线程
+                   必须等jt执行结束才会向下执行
+                   jt.join();
+	      sleep()--线程休眠
+	      interrupt()--中断线程执行
+		  yield()--暂停当前线程，让别的线程先执行
+	      wait()--线程等待
+		  suspend()--暂停线程
+		  resume()--恢复线程
+	      notify()--使一个等待状态的线程唤醒，注意并不能确切唤醒等待状态线程，是由JVM决定且不按优先级
+          如何停止线程：
+               在java中有三种方法可以停止线程
+                  使用退出标志，让线程正常退出，也就是当run方法执行完之后终止
+                  使用stop方法强制终止线程，但是不推荐使用，因为stop和suspend及resume一样，是java废弃的方法
+                  使用interrupt方法中断线程（推荐使用）		  
+     死锁：
+        当两个线程相互等待对方释放同步监视器时就会发生死锁
+	 多线程间通信wait/notify机制：
+          wait()使当前线程阻塞，前提是 必须先获得锁，一般配合synchronized 关键字使用，即，一般在synchronized 
+		  同步代码块里使用 wait()、notify/notifyAll() 方法。
+		  
+	当一个app程序启动时，系统默认有一个进程和主线程，
+	多线程是为了更好的利用cpu的资源。
+	线程安全：经常用来描绘一段代码。指在并发的情况之下，该代码经过多线程使用，线程的调度顺序不影响任何结果。
+	同步：Java中的同步指的是通过人为的控制和调度，保证共享资源的多线程访问成为线程安全，来保证结果的准确。
+	线程同步：
+	     synchronized 修饰代码块或者方法
+		 java的每个对象都有一个内置锁
+		 同步代码块：
+		     同步块是通过锁定一个指定的对象，来对同步块中包含的代码进行同步；
+			 而同步方法是对这个方法块里的代码进行同步，而这种情况下锁定的对象就是同步方法所属的主体对象自身。
+			 如果这个方法是静态同步方法呢？那么线程锁定的就不是这个类的对象了，也不是这个类自身，
+			 而是这个类对应的java.lang.Class类型的对象。同步方法和同步块之间的相互制约只限于同一个对象之间，
+			 所以静态同步方法只受它所属类的其它静态同步方法的制约，而跟这个类的实例（对象）没有关系。
+             如果一个对象既有同步方法，又有同步块，那么当其中任意一个同步方法或者同步块被某个线程执行时，
+			 这个对象就被锁定了，其他线程无法在此时访问这个对象的同步方法，也不能执行同步块。
+		 同步方法：
+		     线程在执行同步方法时是具有排它性的。当任意一个线程进入到一个对象的任意一个同步方法时，这个对象的所有同步方法都被锁定了，
+			 在此期间，其他任何线程都不能访问这个对象的任意一个同步方法，直到这个线程执行完它所调用的同步方法并从中退出，
+			 从而导致它释放了该对象的同步锁之后。在一个对象被某个线程锁定之后，其他线程是可以访问这个对象的所有非同步方法的。
+		synchronized的目的是在某个时刻只有其中的一个线程可以访问这个对象的synchronized 数据。
+		     每个对象都有一个“锁标志”，当这个对象的一个线程访问这个对象的某个synchronized 数据时，
+		     这个对象的所有被synchronized 修饰的数据将被上锁（因为“锁标志”被当前线程拿走了），
+		     只有当前线程访问完它要访问的synchronized 数据时，当前线程才会释放“锁标志”，
+		     这样同一个对象的其它线程才有机会访问synchronized 数据。
+		其他实现同步方法：特殊域变量(volatile)实现线程同步
+			              重入锁实现线程同步--ReentrantLock
+						  局部变量实现线程同步--ThreadLocal
+						  阻塞队列实现线程同步--LinkedBlockingQueue
+						  原子变量实现线程同步--AtomicInteger
+	volatile关键字的使用：					  
+		Java 并发编程中，要想使并发程序能够正确地执行，必须要保证三条原则，即：
+		原子性： 
+		   即一个操作或者多个操作 要么全部执行并且执行的过程不会被任何因素打断，要么就都不执行。
+		可见性： 
+		   是指当多个线程访问同一个共享变量时，一个线程修改了这个变量的值，其他线程能够立即看得到修改的值。
+		有序性：
+		   即程序执行的顺序按照代码的先后顺序执行，指令重排序不会影响单个线程的执行，
+		   但是会影响到线程并发执行的正确性。也就是说，要想使并发程序正确地执行，必须要保证原子性、
+		   可见性以及有序性。只要有一个没有被保证，就有可能会导致程序运行不正确。
+        共享变量：
+		   如果一个变量在多个线程的工作内存中都存在副本，那么这个变量就是这几个线程的共享变量。
+	volatile用来解决变量内存可见性问题：
+        static volatile int counter = 0;
+		volatile变量在每次被线程访问时，都强迫从主内存中重读该变量的值，而当该变量发生变化时，
+		又会强迫将最新的值刷新到主内存。这样任何时刻，不同的线程总能看到该变量的最新值。
+		volatile只能保证可见性，无法保证原子性
+		不能用来解决线程安全问题：
+		   当某个变量被volatile关键字修饰后，多线程对该变量的操作都将直接在主存中进行
+	    编译器--读取变量到寄存器--线程的内存
+		两条规定:
+            线程对共享变量的所有操作都必须在自己的工作空间中操作这个副本，不能直接操作主内存中的共享变量。
+            不同线程之间无法直接访问其他线程工作内存中的变量，线程间变量值的传递需要通过主内存来完成
+		synchronized实现可见性：
+           JMM关于synchronized的两条规定：
+           线程解锁前，必须把共享变量的最新值刷新到主内存中
+           线程加锁时，将清空工作内存中共享变量的值，从而使用共享变量时需要从主存中重新读取最新的值
+		volatile不需要加锁，比synchronized更轻量级，不会阻塞线程；
+        从内存可见性角度讲，volatile读相当于加锁，volatile写相当于解锁
+        synchronized既能保证可见性，又能保证原子性，
+		而volatile只能保证可见性，无法保证原子性，可以保证有序性（禁止指令重排序）
+		Java内存模型只保证了基本读取和赋值是原子性操作，如果要实现更大范围操作的原子性，可以通过 synchronized 和 Lock 来实现
+	　  对于可见性，Java 提供了 volatile关键字 来保证可见性。
+	    volatile的应用场景：状态标记量，Double-Check (双重检查)，开销较低的读－写锁策略
+		
+	    Java中锁的分类：
+		    乐观锁：
+			    认为自己在使用数据时不会有别的线程修改数据，所以不会添加锁，只是在更新数据的时候去判断之前有没有别的线程更新了这个数据
+			悲观锁：
+			    认为自己在使用数据的时候一定有别的线程来修改数据，因此在获取数据的时候会先加锁，确保数据不会被别的线程修改
+			    synchronized关键字和Lock的实现类都是悲观锁
+			公平锁：
+		        线程获取锁的顺序是按照线程加锁的顺序来分配的，即先来先得的FIFO先进先出顺序
+		    非公平锁：
+		        一种获取锁的抢占机制，是随机获得锁的，和公平锁不一样的就是先来的不一定先得到锁，这个方式可能造成某些线程一直拿不到锁，结果也就是不公平的了
+	            ReentrantLock lock=new ReentrantLock(boolean a)，创建锁时如果a为true的话，则创建的是公平锁，如果a为false的话，则创建的是非公平锁
+			自旋锁：
+			    让当前线程进行自旋，如果在自旋完成后前面锁定同步资源的线程已经释放了锁，那么当前线程就可以不必阻塞而是直接获取同步资源，从而避免切换线程的开销
+				AtomicInteger
+			非自旋锁：
+			    让出cpu,阻塞等待
+			可重入锁：
+			    又名递归锁，是指在同一个线程在外层方法获取锁的时候，再进入该线程的内层方法会自动获取锁
+				（前提锁对象得是同一个对象或者class），不会因为之前已经获取过还没释放而阻塞。Java中
+				ReentrantLock和synchronized都是可重入锁，可重入锁的一个优点是可一定程度避免死锁
+			独享锁：
+			   也叫排他锁，是指该锁一次只能被一个线程所持有。如果线程T对数据A加上排它锁后，则其他线程不能再对A加任何类型的锁。
+			   获得排它锁的线程即能读数据又能修改数据。JDK中的synchronized和JUC中Lock的实现类就是互斥锁。
+            共享锁：
+			    指该锁可被多个线程所持有。如果线程T对数据A加上共享锁后，则其他线程只能对A再加共享锁，不能加排它锁。获得共享锁的线程只能读数据，不能修改数据。
+	Android提供了四种常用的操作多线程的方式，分别是：
+    1. Handler+Thread
+    2. AsyncTask
+    3. ThreadPoolExecutor
+    4. IntentService
+	5，HandlerThread
+10，常用设计模式介绍
+   参考链接：https://www.jianshu.com/p/cb2d09c356ba
+   单例，工厂，模板方法，观察者，建造者模式，装饰，，策略者模式，适配器模式
+   单例模式：
+       单例模式确保某个类只有一个实例，而且自行实例化并向整个系统提供这个实例，单例模式保证了全局对象的唯一性
+	   应用地方：相机设置页面数据保持
+   工厂模式：
+   建造者模式：建造者模式的目的是为了分离对象的属性与创建过程
+	       优点：
+           客户端不必知道产品内部细节，将产品本身与产品创建过程解耦，使得相同的创建过程可以创建不同的产品对象
+           可以更加精细地控制产品的创建过程，将复杂对象分门别类抽出不同的类别来，使得开发者可以更加方便地得到想要的产品
+           缺点：使用比较受限：
+               产品属性之间差异很大且属性没有默认值可以指定，这种情况是没法使用建造者模式的，
+			   我们可以试想，一个对象20个属性，彼此之间毫无关联且每个都需要手动指定，那么很显然，即使使用了建造者模式也是毫无作用
+	   应用地方：CaptureRequest.Builder
+	模板方法：
+	    定义一个操作中的算法框架，而将一些步骤延迟到子类中，使得子类可以不改变一个算法的结构即可冲定义该算法的某些特定步骤
+	观察者：
+	    在对象之间定义了一对多的依赖，这样一来，当一个对象改变状态，依赖它的对象会收到通知并自动更新。
+	策略者模式：
+        我清楚知道自己身上有几把武器（策略），我会根据不同的情况使用不同的武器（根据情况，切换策略）。	
+	适配器模式：
+	    适配器模式就像旅行插座转换器、Type-c转VGA转接口一样
+11，内存泄露和内存溢出OOM介绍
+  参考链接：https://www.cnblogs.com/andashu/p/6440944.html
+  内存泄漏：应该被回收的对象，因为有其他对象引用，导致不能及时回收就造成内存泄漏
+  内存溢出OOM：要申请内存大于系统剩余内存，就会报OOM.
+  四大引用：强引用，软引用，弱引用，虚引用
+  防止方法：
+      1，Handler引起的内存泄漏
+	        --Handler用自定义静态内部类方式创建并弱引用Activity 
+            --在退出Activity时调用removeCallbacksAndMessages
+	  2，注册/反注册未成对使用引起的内存泄漏
+	  3，资源对象没有关闭引起的内存泄漏
+	  4，单例模式引起的内存泄漏--引用ApplicationContext或者WeakReference activity
+	  5，非静态内部类创建静态实例引起的内存泄漏
+	  6，非静态匿名内部类引起的内存泄漏
+	      //静态内部类 + 弱引用
+           //单独写一个文件 + onDestory  = null;
+	  7，集合对象没有及时清理引起的内存泄漏
+	  8,静态变量导致内存泄漏：sPolice = new Police(this);，退出是将sPolice == null 
+	  9,定时任务，退出应用时应取消
+	  10，动画同样是一个耗时任务，比如在 Activity 中启动了属性动画 (ObjectAnimator) ，
+	  但是在销毁的时候，没有调用 cancle 方法，虽然我们看不到动画了，但是这个动画依然会不断地播放下去，
+	  动画引用所在的控件，所在的控件引用 Activity ，这就造成 Activity 无法正常释放。因此同样要在Activity 
+	  销毁的时候 cancel 掉属性动画，避免发生内存泄漏。
+	  内存泄漏检测工具：LeakCanary  profile/MAT
+12，ANR介绍
+  参考链接：https://www.jianshu.com/p/388166988cef
+  Application Not Responding，即应用无响应
+  出现的原因有三种： a）KeyDispatchTimeout（5 seconds）主要类型按键或触摸事件在特定时间内无响应 
+                     b）BroadcastTimeout（10 seconds）BoradcastReceiver在特定的时间内无法处理 
+					 c）ServiceTimeout（20 seconds）小概率类型Service在特定的时间内无法处理完成
+  避免ANR最核心的一点就是
+      在主线程减少耗时操作。
+	  通常需要从那个以下几个方案下手： 
+	      a）使用子线程处理耗时IO操作 
+		  b）降低子线程优先级，使用Thread或者HandlerThread时，
+		  调用Process.setThreadPriority（Process.THREAD_PRIORITY_BACKGROUND）设置优先级，
+		  否则仍然会降低程序响应，因为默认Thread的优先级和主线程相同 
+		  c）使用Handler处理子线程结果，而不是使用Thread.wait()或者Thread.sleep()来阻塞主线程 
+		  d）Activity的onCreate和onResume回调中尽量避免耗时的代码 
+		  e）BroadcastReceiver中onReceiver代码也要尽量减少耗时操作，
+		  f)建议使用intentService处理。intentService是一个异步的，会自动停止的服务，
+		  很好解决了传统的Service中处理完耗时操作忘记停止并销毁Service的问题
+   分析：
+      traces.txt文件
+  原因：
+     在主线程进行耗时操作
+	 锁竞争--camera里面常见
+13.性能优化
+参考链接：https://blog.csdn.net/weixin_33937499/article/details/87957303
+          https://www.jianshu.com/p/797395731747
+	      https://juejin.cn/post/6844903842509750286
+		  1，UI绘制优化：
+		       图像显示流程：ImageView加载到内存--CPU计算--GPU栅格化显示
+			   绘制原理：
+			      onCreate()--setContentView,将布局ID转换为View对象
+				  onResume()--实行绘制
+		       60 HZ 刷新频率由来：
+		           12 fps: 由于人类眼睛的特殊生理结构，
+		                   如果所看到的画面之帧率高于每秒约 10 - 12 帧的时候，就会认为是连贯的；
+                   24 fps: 有声电影的拍摄及播放帧率均为 24 帧，对一般人而言可以接受；
+                   30 fps:  早期的高动态电子游戏，帧率少于每秒 30 帧的话就会显得不连贯，
+		      	          这是因为没有动态模糊使流畅度降低;
+                   60 fps: 在于手机交互过程中，如触摸和反馈 60 帧以下，肉眼是能感觉出来的。
+		      	          60 帧以上不能察觉变化。当低于 60 fps 时感觉画面有卡顿现象。
+                   Android 系统每隔 16ms 发出 VSYNC 信号 (1000 ms / 60 = 16.66 ms) ，
+		      	  触发对 UI 进行渲染， 如果每次渲染都成功这样就能够达到流畅的画面所需要的 60 fps ，
+		      	  为了能够实现 60 fps ，这意味着计算渲染的大多数操作都必须在 16ms 内完成
+              界面卡顿：
+		          当这一帧画面渲染时间操过 16 ms 的时候，垂直同步机制会让显示器硬件等待 GPU 
+		      	 完成栅格化渲染操作，这样会让这一帧画面，多停留了 16 ms,甚至更多，
+		      	 这样就造成了用户看起来画面停顿
+              GPU 过渡绘制几种情况：
+                  自定义控件中 onDraw 方法做了过多重复绘制。
+                  布局层次太深，重叠性太强。用户看不到区域也会渲染，导致耗时增加
+		       过渡绘制优化(主要减少 GPU 工作量)优化方案：
+		           1，减少背景重复（非业务需要，不要设置背景）
+		      	     去掉单个 activity 的主题设置，
+		      		 可以在 setContentView 之前 
+		      		 getWindow().setBackgroupDrawable(null);
+		      		 去掉所有的 activity 主题中的属性
+		      		 <item name="android:windowBackground">@null</item>
+		      	  2，使用裁剪来减少控件之间的重合部分 
+		      	     自定义中 如果有出现覆盖遮挡的视图，可以按照上一层的位置来进行 裁剪 			
+            2，布局优化(主要减少 CPU 工作量)：
+			   include--布局复用，减少cpu计算
+			   合理使用merge
+			   viewstub--布局当中子View布局非常多，不需要同时显示
+			3，内存优化：
+               .java--编译成--.class--类装载器--JVM--元信息对象--JVM加载到内存
+			   java gc如何回收内存：
+			        虚拟机基本都是采用可达性分析算法：
+					强引用：通常可以认为是通过new出来的对象，即使内存不足，GC进行垃圾收集的时候也不会主动回收。Object obj = new Object();
+					     GC不会回收对象，用完后需置null:
+					     obj = null; //等 GC 来回收    
+                    软引用：在内存不足的时候，GC进行垃圾收集的时候会被GC回收。
+					      Object obj = new Object();
+                          SoftReference<Object> softReference = new SoftReference<>(obj);
+					      对象是在 jvm 内存不够的时候才会被回收，
+					      我们调用 System.gc() 方法只是起通知作用， 
+					      JVM 什么时候扫描回收对象是 JVM 自己的状态决定的。
+					      就算扫描到了 str 这个对象也不会回收，只有内存不足才会回收。
+                    弱引用：无论内存是否充足，GC进行垃圾收集的时候都会回收
+					     Object obj = new Object();
+                         WeakReference<Object> weakReference = new WeakReference<>(obj);
+    					一旦发现了只具有弱引用的对象，不管当前内存空间足够与否，都会回收它的内存
+		                不过由于垃圾回收器是一个优先级很低的线程，因此不一定会很快发现那些只具有弱引用的对象。
+                        weakReference 对象的生命周期基本由 GC 决定，一旦 GC 线程发现了弱引用就标记下来，
+						第二次扫描到就直接回收了。
+                    虚引用：
+					     Object obj = new Object();
+                         ReferenceQueue<Object> referenceQueue = new ReferenceQueue<>();
+					    如果一个对象仅持有虚引用，那么它就和没有任何引用一样，在任何时候都可能被垃圾回收器回收
+			4，apk体积优化：
+			   1，将图片转换为webpp格式
+			   2，去除多语言
+			   3，去除不必要的so库
+			   4，去除无用资源Link检查
+			   5，开启混淆
+			   6，移除无用资源
+			   
+14，内存优化
+参考链接：https://www.cnblogs.com/renhui/p/11761586.html
+定义：优化处理应用程序的内存使用，空间占用。
+处理： 内存抖动、内存泄漏、内存溢出OOM
+内存抖动：
+        频繁创建大量、临时的小对象
+    排查方向：
+        优先寻找循环或者频繁调用的地方进行排查。
+	优化方案：
+	    避免创建大量、临时的小对象
+		String 换成 StringBuffer 或者 StringBuilder，就能很完美的解决字符串拼接造成的内存抖动问题。
+内存优化的优点：
+    1、减少OOM，提高应用稳定性。
+    2、减少卡顿，提高应用流畅度。
+    3、减少内存占用，提高应用后台运行时的存活率。
+    4、减少异常发生和代码逻辑隐患。
+java虚拟机内存模型：
+    方法区：主要存储虚拟机加载的类信息，常量，静态变量，及时编译器编译后的代码等数据。
+	    内存优化时这一部分主要考虑是不是加载了很多不必要的第三方库。这部分的内存减少主要
+	    是常量池的回收和类的卸载（类卸载条件：无引用，类加载器可卸载）
+    堆（主要内存优化点）：几乎所有的对象都在这个区域产生，该区域属于线程共享的区域，所以写代码时更要注意多线程安全。
+	    这个内存区域的大小变化主要是对象的创建和回收，比如：如果短时间内有大量的对象创建和回收，
+	    可能会造成内存抖动，如果对象创建之后一直回收不掉，则会导致内存泄漏，
+	    严重的内存泄漏会导致频繁的gc，从而是界面卡顿。
+    虚拟机栈：这个区域就是我们平时所说的栈，描述的是java方法执行的内存模型，
+	          我们常说的方法栈的入栈就是将方法的栈帧存储到虚拟机栈，
+	    这个区域是线程私有的，其生命周期就是线程的生命周期。也就是说每个线程都会有，
+	    默认一个线程的线程栈大小是1M，这不包括在方法中产生的其他对象的大小。
+	    这一块我们能控制的就是线程的数量，特别是程序中没有使用线程池或者使用的多个第三方库都带有线程池的情况。
+    本地方法栈：同虚拟机栈的作用非常类似，是为虚拟机执行native方法服务的，
+        所以需要注意的地方也和虚拟机栈一样，特别是使用了第三方so的情况
+	android中的进程分为两种：
+       1.native进程：采用C/C++实现，不包含dalvik实例的linux进程，
+	       /system/bin/目录下面的程序文件运行后都是以native进程形式存在的
+       2.java进程：实例化了dalvik虚拟机实例的linux进程，
+	      进程的入口main函数为java函数。dalvik虚拟机实例的宿主进程是fork()系统调用创建的linux进程，
+		  所以每一个android上的java进程实际上就是一个linux进程，只是进程中多了一个dalvik虚拟机实例
+	Androidmanifest文件中application节点加入android:largeHeap=“true”来增加其dalvik虚拟机中堆的大小指的是java堆
+Android内存管理机制：
+  对进程，对象，变量进行内存分配和回收。
+  AppFrameWork和Linux内核负责进程内存管理
+  Dalvik虚拟机负责对象和变量内存管理
+进程：
+  ActivityManagerService 集中管理 所有进程的内存分配
+  Application Framework 决定回收的进程类型
+  Android中的进程 是托管的；当进程空间紧张时，会 按进程优先级低->>高的顺序 自动回收进程
+  Linux 内核真正回收具体进程
+对象，变量：
+   静态分配--静态变量--静态存储区-常量，静态变量 
+   栈式分配--局部变量--栈区
+   堆式分配--对象实例--堆区
+优化方案：
+ 1，注册对象未注销
+     BraodcastReceiver、EventBus未注销造成的内存泄漏，我们应该在Activity销毁时及时注销
+ 2，资源性对象未关闭
+   cursor用完之后应该关闭
+ 3，类的静态变量持有大数据对象
+   尽量避免使用静态变量存储数据，特别是大数据对象，建议使用数据库存储。
+ 4，单例造成的内存泄漏
+    优先使用Application的Context，如需使用Activity的Context，可以在传入Context时使用弱引用进行封装，然后，在使用到的地方从弱引用中获取Context，如果获取不到，则直接return即可
+ 5，非静态内部类的静态实例
+    该实例的生命周期和应用一样长，这就导致该静态实例一直持有该Activity的引用，
+	Activity的内存资源不能正常回收。此时，我们可以将该内部类设为静态内部类或
+	将该内部类抽取出来封装成一个单例，如果需要使用Context，尽量使用Application Context，
+	如果需要使用Activity Context，就记得用完后置空让GC可以回收，否则还是会内存泄漏。
+ 6，handler造成的内存泄漏：
+    AsyncTask内部也是Handler机制，同样存在内存泄漏风险，但其一般是临时性的。对于类似AsyncTask或是线程造成的内存泄漏，
+	我们也可以将AsyncTask和Runnable类独立出来或者使用静态内部类。
+ 7,容器中的对象没清理造成的内存泄漏
+    在退出程序之前，将集合里的东西clear，然后置为null，再退出程序
+ 编码习惯避免内存问题：
+    1，数据类型: 不要使用比需求更占用空间的基本数据类型
+    2，循环尽量用 foreach ,少用 iterator, 自动装箱也尽量少用
+    3，数据结构与算法的解度处理 (数组，链表，栈树，树，图)
+            数据量千级以内可以使用 Sparse 数组 (Key为整数)，
+			ArrayMap (Key 为对象) 虽然性能不如 HashMap ，但节约内存。
+     4，枚举优化
+        缺点:
+            每一个枚举值都是一个单例对象,在使用它时会
+			增加额外的内存消耗,所以枚举相比与 Integer 和 String 
+			会占用更多的内存较多的使用 Enum 会增加 DEX 文件的大小,
+			会造成运行时更多的 IO 开销,使我们的应用需要更多的空间
+			特别是分 Dex 多的大型 APP，枚举的初始化很容易导致 ANR
+               优化后的代码:可以直接限定传入的参数个数
+               public class SHAPE {
+                  public static final int TYPE_0=0;
+                  public static final int TYPE_1=1;
+                  public static final int TYPE_2=2;
+                  public static final int TYPE_3=3;
+               
+               
+                  @IntDef(flag=true,value={TYPE_0,TYPE_1,TYPE_2,TYPE_3})
+                  @Target({ElementType.PARAMETER,ElementType.METHOD,ElementType.FIELD})
+                  @Retention(RetentionPolicy.SOURCE)
+                  public @interface Model{
+               
+                  }
+               
+                  private @Model int value=TYPE_0;
+                  public void setShape(@Model int value){
+                      this.value=value;
+                  }
+               } 
+       5,static , static final 的问题
+            static 会由编译器调用 clinit 方法进行初始化
+            static final 不需要进行初始化工作，打包在 dex 
+			文件中可以直接调用，并不会在类初始化申请内存
+			基本数据类型如果不用修改的建议全部写成 static final,因为 它不需要进行初始化工作，直接打包到 dex 就可以直接使用，
+			并不会在 类 中进行申请内存
+           基本数据类型的成员，可以全写成 static final
+        6,字符串的拼接尽量少用 +=,用StringBuilder代替
+		7，Service 耗时操作尽量使用 IntentService,而不是 Service
+		8，尽量使用 C++ 代码转换 YUV 格式，别用 Java 代码转换 RGB 等格式，真的很占用内存
+15，跨进程通信：
+参考链接：https://www.cnblogs.com/andy-songwei/p/10256379.html 
+    进程隔离：
+        在操作系统中，进程与进程间的内存和数据都是不共享的
+	进程间通信（IPC:Inter-Process Communication，即进程间通信或跨进程通信），两个进程之间交换数据
+	分类：
+	    1、Activity方式
+		    startActivity的方式从一个App，跳转到了另外一个App的Activity，从而实现了跨进程通信
+			    Intent intent = new Intent();
+                intent.setAction(Intent.ACTION_CALL);
+                startActivity(intent);//startActivityForResult()同样，这里不赘述
+		2，Content provider方式
+		    主要用于跨进程数据库共享
+		3，Broadcast方式
+		     sendBroadcast();
+		4、Service方式 
+		   startSevice()/bindService()--aidl
+Android进程内通信：
+    （1）显示调用startActivity()。可以用Intent携带数据，而且如果用startActivityForResult()，
+	     还可以得到目标Activity完成任务后的反馈。
+    （2）startService/bindService。用于与service通信，其中Intent，回调方法等会携带数据或者对象，选择哪一个需要视情况而定。
+    （3）Boradcast。局部广播——LocalBroadcastManager，只能在app内部使用，也是一种进程内通信的方法，
+	且在性能、安全等方面都要优于全局广播
+    （4）Handler方式。这种方式在子线程和主线程通信中用得很普遍，跨模块使用也常见到，使用方便。需要注意的是Looper和线程问题。
+    （5）回调。最普遍的方式了，使用也很方便。一般会结合面向接口编程来实现，
+	如果调用的层次比较深，同一个接口注册的地方太多，可读性会比较差，经常看得头晕。
+	甚至有时候这些注册回调的地方会相互干扰。使用的时候要注意退出该模块的时候，把注册的回调变量置空销毁。
+    （6）EventBus。使用简单，耦合度低，代码可读性比较好，也受到很多开发者的喜爱。但也有一些缺点：
+	1）需要导入第三方库。2）发送消息出去后，被注册的地方都会收到该消息，如果处理不当，
+	开发者甚至不容易意识到哪些地方收到了消息并做了处理，带来不必要的混乱。
+	3）当注册了EventBus的模块退出后，容易忘记反注册。
+    （7）SharePreference（简称SP）等数据存储方式。这个就是数据的持久化和模块间共享数据了，
+	除了SP，还有网络存储，Sqilite数据库，文件存储等多种方式，功能可以类比跨进程通信的ContentProvider。             		   
+16，Surface,View，SurfacaeTexture,SurfaceView，GLsurfaceview,Textureview三者的区别--opengl es
+        Surface,一个window都有自己的一个surface，
+		     该对象持有一群像素（pixels），这些像素是要被组合到一起显示到屏幕上的
+        View,显示视图，View必须附着在Window，
+		   内置画布，处理事件，UI线程更新，速度较慢
+	    SurfaceView，继承自View,不能设置透明度,平移动画，
+		             开辟新窗口window，拥有独立的Surface,
+             		双缓冲机制,允许子线程更新，刷新速度快，它在需要渲染时，内容会变得完全透明，view部分只是一个透明的占位符
+        GlSurfaceView，拥有 SurfaceView 全部特性，封装EGL环境，
+		            专门用于opengl渲染，具有独立的渲染线程，它在需要渲染时，内容会变得完全透明，view部分只是一个透明的占位符
+	    SurfacaeTexture: 对图像流的处理并不直接显示，而是转为 GL 外部纹理，
+        TextrueView:支持View属性设置，比如透明度，平移，设置，它在需要渲染时，内容会变得完全透明，view部分只是一个透明的占位符
+	备注：
+	    android graphics主要干了2件事：
+         一个是画图，一个是合成显示。
+         1.画图
+            两种方式将图像绘制在屏幕上， Canvas 和 opengl
+            canvas：用于绘制 原生和 自定义View
+            通过OpenglRender，将canvas画的图，转换为opengl 运算，再通过surface进行渲染，通过GPU去显示
+            opengl ：直接通过surface进行渲染，通过GPU去显示
+            无论开发者使用什么渲染 API，一切内容都会渲染到“Surface”
+         2.显示
+            window
+            Window有三种类型，分别是ApplicationWindow，ChildrenWindow 和SystemWindow 
+            Application Window 对应一个 Acitivity
+            Children Window不能单独存在，需要依附在特定的父 Window 中，比如常见的一些 Dialog 就是一个子 Window
+            System Window 需要声明权限才能创建的Window，比如 Toast 和系统状态栏都是系统 Window。悬浮框就是通过这个属性创建的
+            另外Window 是分层的，每个 Window 都有对应的 z-ordered，层级大的会覆盖在层级小的 Window 上面。
+            Application Window层级范围是 1~99
+            Children Window 层级范围是 1000~1999
+            System Window 层级范围是 2000~2999
+            View Hierarch
+            用来组织一个window上的所有view的显示，一个window只有一个View Hierarch
+            WindowManager
+            管理系统中的所有Window,一块块的Window,在WindowManager的管理下有序的排列在屏幕上，Android 才得以呈现出多姿多彩的界面 。
+            WindowManager会监督生命周期、输入和聚焦事件、屏幕方向、转换、动画、位置、变形、Z-Order 以及窗口的其他许多事件
+            SurfaceFlinger
+            管理消耗当前可见的surface，所有被渲染的可见 Surface 都被 SurfaceFlinger，通过window manager 提供的信息合成到显示部分
+17,JNI编程--java native interface，java和c互调，一般用来集成三方算法库
+18,MVP/MVC/MVVM介绍
+19，java泛型介绍：
+    Java 的泛型在编译期有效，在运行期会被删除
+    泛型类并没有自己独有的Class类对象
+	//private static T javaee;   // 泛型不能使用在静态属性上
+优点：使用泛型时，在实际使用之前类型就已经确定了，不需要强制类型转换。
+    
+常用adb指令：
+adb logcat -c 清除Log
+adb logcat >test.txt抓取Log,保存到test.txt中
+
+adb root获取root权限
+adb remount获取设备是否连接
+adb shell进入文件系统
+adb shell > ls查看目录下的文件
+
+常用git指令：
+git分区：
+工作区--添加，编辑，删除，修改文件
+暂存区--git add 添加之后
+本地仓库--git commit -m "提交描述"
+
+git add .添加修改内容
+git commit -m "test add "提交修改内容
+git push 上传修改内容
+git pull更新本地代码
+
+git cherry-pick从另一个分支，选取某条提交更新到当前分支
+
+git checkout 切换分支
+git branch 创建分支
+
+git init 初始化仓库
+
+git status查看工作区状态
+
+git branch -a查看远端分支
+git branch查看本地分支
+git branch dev创建本地分支
+git checkout dev切换分支 
+git checkout -b dev创建并切换分支
+
+查看已有的配置信息：
+git config --list 命令
+$ git config --global user.name "runoob"用户名
+$ git config --global user.email test@runoob.com邮箱
+
+添加本地文件到github仓库：
+git init
+git add README.md
+git commit -m "first commit"
+git branch -M main重命名分支
+git remote add origin https://github.com/Timlius/gittest.git
+git remote add origin https://github.com/Timlius/GitDemo.git
+git push -u origin main
+
+git branch -D  hello 删除hello这个分支
+
+git log 查看历史提交记录
+git log --oneline查看简洁版本
+git log --graph图表形式查看
+git log --reverse --oneline逆向显示所有日志
+git log --author=Linus --oneline -5查看指定用户提交
+git blame <file> 以列表形式查看指定文件的历史修改记录
+
+git merge 合并分支
+
+patch:
+
+
+MediaRecorder状态：    
+             录音录像时需要严格遵守状态图说明中的函数调用先后顺序， 
+             在不同的状态调用不同的函数，否则会出现异常。
+Initial：初始状态，
+         当使用new()方法创建一个MediaRecorder对象或者调用了reset()方法时，
+         该MediaRecorder对象处于Initial状态。在设定视频源或者音频源之后将转换为Initialized状态。
+         另外，在除Released状态外的其它状态通过调用reset()方法都可以使MediaRecorder进入该状态。
+Initialized：已初始化状态，
+             可以通过在Initial状态调用setAudioSource()或setVideoSource()方法进入该状态。
+			 在这个状态可以通过setOutputFormat()方法设置输出格式，
+			 此时MediaRecorder转换为DataSourceConfigured状态。另外，通过reset()方法进入Initial状态。
+DataSourceConfigured：数据源配置状态，
+          这期间可以设定编码方式、输出文件、屏幕旋转、预览显示等等。
+		  可以在Initialized状态通过setOutputFormat()方法进入该状态。
+		  另外，可以通过reset()方法回到Initial状态，或者通过prepare()方法到达Prepared状态。
+Prepared：就绪状态，
+        在DataSourceConfigured状态通过prepare()方法进入该状态。
+		在这个状态可以通过start()进入录制状态。
+		另外，可以通过reset()方法回到Initialized状态。
+Recording：录制状态，
+          可以在Prepared状态通过调用start()方法进入该状态。
+		  另外，它可以通过stop()方法或reset()方法回到Initial状态。
+Released：释放状态
+        （官方文档给出的词叫做Idle state 空闲状态），
+		可以通过在Initial状态调用release()方法来进入这个状态，
+		这时将会释放所有和MediaRecorder对象绑定的资源。
+Error：错误状态，
+       当错误发生的时候进入这个状态，它可以通过reset()方法进入Initial状态。
+	   
+接下来的安排：
+根据自己手机自带相机，优化自己实现的相机demo的UI
+1，实现倒计时拍照功能，倒计时带动画
+2，添加慢动作模式
+3，添加专业模式
+4，专业模式中实现手动调节iso,af，awb功能
+5，实现闪光灯打开，关闭，自动，常亮四种模式拍照
+6，实现参考线功能
+7，设置中添加拍照声音控制开关，使能控制拍照或录像时是否有提示音
+8，权限申请
+9，点击对焦功能
+10，录像模式实现，录像过程中拍照，录像暂停功能
+11，opengl es实现黑白滤镜功能
+12，jni编译so库，java传参给c++,c++传参给java
