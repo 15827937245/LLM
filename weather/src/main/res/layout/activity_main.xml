@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/main_ll"
+    tools:context=".MainActivity">
+
+    <RelativeLayout
+        android:id="@+id/main_top_rl"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_gravity="top"
+        android:layout_marginTop="20dp"
+        android:padding="10dp"
+        >
+        <ImageView
+            android:id="@+id/main_add"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:layout_alignParentRight="true"
+            android:layout_centerInParent="true"
+            android:layout_marginRight="10dp"
+            android:src="@mipmap/add"
+            android:onClick="getProvince"
+            />
+    </RelativeLayout>
+
+    <LinearLayout
+        android:id="@+id/main_body_ll"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/main_top_rl"
+        android:gravity="center"
+        android:padding="10dp"
+        android:orientation="vertical">
+        <TextView
+            android:id="@+id/main_body_ll_text_city"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="地区"
+            android:textSize="20sp"/>
+
+        <TextView
+            android:id="@+id/main_body_ll_text_temp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="温度"
+            android:textSize="50sp"/>
+
+        <TextView
+            android:id="@+id/main_body_ll_text_tempRate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="低温/高温"
+            android:textSize="20sp"/>
+
+        <TextView
+            android:id="@+id/main_body_ll_text_weather"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="天气"
+            android:textSize="20sp"/>
+
+
+    </LinearLayout>
+<Button
+    android:layout_centerInParent="true"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="测试"
+    android:onClick="test"/>
+</RelativeLayout>

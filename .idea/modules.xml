@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/LLMDemo.iml" filepath="$PROJECT_DIR$/.idea/modules/LLMDemo.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/activity/LLMDemo.activity.iml" filepath="$PROJECT_DIR$/.idea/modules/activity/LLMDemo.activity.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/animmator/LLMDemo.animmator.iml" filepath="$PROJECT_DIR$/.idea/modules/animmator/LLMDemo.animmator.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/LLMDemo.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/LLMDemo.app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/broadcastdemo/LLMDemo.broadcastdemo.iml" filepath="$PROJECT_DIR$/.idea/modules/broadcastdemo/LLMDemo.broadcastdemo.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/contentprovider/LLMDemo.contentprovider.iml" filepath="$PROJECT_DIR$/.idea/modules/contentprovider/LLMDemo.contentprovider.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/demo/LLMDemo.demo.iml" filepath="$PROJECT_DIR$/.idea/modules/demo/LLMDemo.demo.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/game/LLMDemo.game.iml" filepath="$PROJECT_DIR$/.idea/modules/game/LLMDemo.game.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/handler/LLMDemo.handler.iml" filepath="$PROJECT_DIR$/.idea/modules/handler/LLMDemo.handler.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/handler2/LLMDemo.handler2.iml" filepath="$PROJECT_DIR$/.idea/modules/handler2/LLMDemo.handler2.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/mycamrea/LLMDemo.mycamrea.iml" filepath="$PROJECT_DIR$/.idea/modules/mycamrea/LLMDemo.mycamrea.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/save/LLMDemo.save.iml" filepath="$PROJECT_DIR$/.idea/modules/save/LLMDemo.save.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/servicedemo/LLMDemo.servicedemo.iml" filepath="$PROJECT_DIR$/.idea/modules/servicedemo/LLMDemo.servicedemo.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/thread/LLMDemo.thread.iml" filepath="$PROJECT_DIR$/.idea/modules/thread/LLMDemo.thread.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/threadlocal/LLMDemo.threadlocal.iml" filepath="$PROJECT_DIR$/.idea/modules/threadlocal/LLMDemo.threadlocal.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/view/LLMDemo.view.iml" filepath="$PROJECT_DIR$/.idea/modules/view/LLMDemo.view.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/weather/LLMDemo.weather.iml" filepath="$PROJECT_DIR$/.idea/modules/weather/LLMDemo.weather.iml" />
+    </modules>
+  </component>
+</project>
